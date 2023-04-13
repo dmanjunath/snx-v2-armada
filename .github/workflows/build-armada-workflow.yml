@@ -15,6 +15,7 @@ jobs:
         token: ${{ secrets.TOKEN }}
     - run: cd v2/ui
     - run: yarn install
+    - run: yarn build
     - run: ls
     - run: pwd
     - uses: armada-network/armada-release-action@v1
