@@ -4,16 +4,21 @@ on:
   #   # Runs every hour on the hour
   #   - cron: '0 * * * *'
   workflow_dispatch:
+    inputs:
+      name:
+        required: true
+
 
 jobs:
-  check-links:
+  publish:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
       with:
         repository: Synthetixio/js-monorepo
         token: ${{ secrets.TOKEN }}
-    - run: |
+    - name: Install dependencies & build
+      run: |
         ls
         pwd
         cd v2/ui
@@ -25,15 +30,15 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
       run: |
-        bundle_filename="$(npx --package=armada-cli@0.2.1 --yes armada bundle create ${{ inputs.bundle_name }} v2/ui/out)"
+        bundle_filename="$(npx --package=armada-cli@0.2.1 --yes armada bundle create ${{ github.event.inputs.name }} v2/ui/out)"
         
         hash="$(npx --package=armada-cli@0.2.1 --yes armada bundle checksum $bundle_filename)"
 
         checksum_filename="$filename_SHA256SUM"
         echo "$hash" > $checksum_filename
 
-        gh release create release-test
-        gh release upload release-test $bundle_filename
-        gh release upload release-test $checksum_filename
+        gh release create ${{ github.event.inputs.name }}
+        gh release upload ${{ github.event.inputs.name }} $bundle_filename
+        gh release upload ${{ github.event.inputs.name }} $checksum_filename
 
         # TODO publish bundle
