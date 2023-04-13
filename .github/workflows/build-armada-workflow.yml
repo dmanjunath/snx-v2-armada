@@ -1,0 +1,24 @@
+name: 'Publish to Armada'
+on:
+  # schedule:
+  #   # Runs every hour on the hour
+  #   - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        repository: Synthetixio/js-monorepo
+        token: ${{ secrets.TOKEN }}
+    - run: cd v2/ui
+    - run: yarn install
+    - run: ls
+    - run: pwd
+    - uses: armada-network/armada-release-action@v1
+      with:
+        build_dir: out
+        bundle_name: release-test
+        github_token: ${{ secrets.TOKEN }}
