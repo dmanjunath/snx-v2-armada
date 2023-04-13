@@ -34,7 +34,7 @@ jobs:
         
         hash="$(npx --package=armada-cli@0.2.1 --yes armada bundle checksum $bundle_filename)"
 
-        checksum_filename="$filename_SHA256SUM"
+        checksum_filename="${filename}_SHA256SUM"
         echo "$hash" > $checksum_filename
 
         gh release create ${{ github.event.inputs.name }}
