@@ -13,13 +13,16 @@ jobs:
       with:
         repository: Synthetixio/js-monorepo
         token: ${{ secrets.TOKEN }}
-    - run: cd v2/ui
-    - run: yarn install
-    - run: yarn build
-    - run: ls
-    - run: pwd
+    - run: |
+        ls
+        pwd
+        cd v2/ui
+        yarn install
+        yarn build
+        ls
+        pwd
     - uses: armada-network/armada-release-action@v1
       with:
-        build_dir: out
+        build_dir: v2/ui/out
         bundle_name: release-test
         github_token: ${{ secrets.TOKEN }}
