@@ -37,8 +37,8 @@ jobs:
         checksum_filename="${filename}_SHA256SUM"
         echo "$hash" > $checksum_filename
 
-        gh release create ${{ github.event.inputs.name }}
-        gh release upload ${{ github.event.inputs.name }} $bundle_filename
-        gh release upload ${{ github.event.inputs.name }} $checksum_filename
+        gh release create -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }}
+        gh release upload -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }} $bundle_filename
+        gh release upload -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }} $checksum_filename
 
         # TODO publish bundle
