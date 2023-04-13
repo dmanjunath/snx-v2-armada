@@ -1,0 +1,52 @@
+name: 'Publish to Armada'
+on:
+  # this is currently triggered manually because it's running on an external repo
+  # but if this was part of a regular CI workflow it could be run on merge or release or cron
+  workflow_dispatch:
+    inputs:
+      name:
+        required: true
+
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        repository: Synthetixio/js-monorepo
+        token: ${{ secrets.TOKEN }}
+    - name: Install dependencies & build SNX v2 UI
+      run: |
+        cd v2/ui
+        yarn install
+        yarn build
+    - name: Create armada release
+      id: create_release
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+      run: |
+        bundle_filename="$(npx --package=armada-cli@0.2.1 --yes armada bundle create ${{ github.event.inputs.name }} v2/ui/out)"
+        
+        checksum="$(npx --package=armada-cli@0.2.1 --yes armada bundle checksum $bundle_filename)"
+
+        checksum_filename=${{ github.event.inputs.name }}"_SHA256SUM"
+        echo "$checksum" > $checksum_filename
+
+        gh release create -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }}
+        gh release upload -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }} $bundle_filename
+        gh release upload -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }} $checksum_filename
+
+        echo "bundle_filename=$bundle_filename" >> $GITHUB_OUTPUT
+        echo "checksum_filename=$checksum_filename" >> $GITHUB_OUTPUT
+        echo "checksum=$checksum" >> $GITHUB_OUTPUT
+    - name: Publish release
+      id: publish_release
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+      run: |
+        bundle_url=$(gh release view -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }} --json assets --jq ".assets[] | select(.name == \"${{ steps.create_release.outputs.bundle_filename }}\") | .url")
+
+        # this step can be run externally or controlled by a multisig or DAO
+        # this is what actually writes the bundle url and checksum to chain
+        npx armada-cli project publish ${{ vars.PROJECT_ID }} $bundle_url ${{ steps.create_release.outputs.checksum }} --key=${{ secrets.ARMADA_PRIVATE_KEY }}
