@@ -21,8 +21,19 @@ jobs:
         yarn build
         ls
         pwd
-    - uses: armada-network/armada-release-action@v1
-      with:
-        build_dir: v2/ui/out
-        bundle_name: release-test
-        github_token: ${{ secrets.TOKEN }}
+    - name: Publish armada release
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+      run: |
+        bundle_filename="$(npx --package=armada-cli@0.2.1 --yes armada bundle create ${{ inputs.bundle_name }} v2/ui/out)"
+        
+        hash="$(npx --package=armada-cli@0.2.1 --yes armada bundle checksum $bundle_filename)"
+
+        checksum_filename="$filename_SHA256SUM"
+        echo "$hash" > $checksum_filename
+
+        gh release create release-test
+        gh release upload release-test $bundle_filename
+        gh release upload release-test $checksum_filename
+
+        # TODO publish bundle
