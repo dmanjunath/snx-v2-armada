@@ -30,12 +30,14 @@ jobs:
         
         checksum="$(npx --package=armada-cli@0.2.1 --yes armada bundle checksum $bundle_filename)"
 
-        checksum_filename=$filename"_SHA256SUM"
+        checksum_filename=${{ github.event.inputs.name }}"_SHA256SUM"
         echo "$checksum" > $checksum_filename
 
         gh release create -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }}
         gh release upload -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }} $bundle_filename
         gh release upload -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }} $checksum_filename
+
+        sleep 15
 
         bundle_url="$(gh release view ${{ github.event.inputs.name }} --json assets --jq '.assets[] | select(.name == \"$bundle_filename\") | .url')"
 
