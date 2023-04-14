@@ -23,6 +23,7 @@ jobs:
         yarn install
         yarn build
     - name: Create armada release
+      id: create_release
       env:
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
       run: |
@@ -39,13 +40,19 @@ jobs:
 
         echo "bundle_filename" $bundle_filename "checksum" $checksum
 
-        sleep 30
-
+        echo "bundle_filename=$bundle_filename" >> $GITHUB_OUTPUT
+        echo "checksum_filename=$checksum_filename" >> $GITHUB_OUTPUT
+        echo "checksum=$checksum" >> $GITHUB_OUTPUT
+    - name: Publish release
+      id: publish_release
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+      run: |
         echo "about to fetch bundle url"
-        echo $(gh release view ${{ github.event.inputs.name }} --json assets)
-        bundle_url=$(gh release view ${{ github.event.inputs.name }} --json assets --jq ".assets[] | select(.name == \"$bundle_filename\") | .url")
+        echo $(gh release view -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }} --json assets)
+        bundle_url=$(gh release view -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }} --json assets --jq ".assets[] | select(.name == \"${{ steps.create_release.outputs.bundle_filename }}\") | .url")
         echo "bundle_url" $bundle_url
 
         # this step can be run externally or controlled by a multisig or DAO
         # this is what actually writes the bundle url and checksum to chain
-        npx armada-cli project publish ${{ env.PROJECT_ID }} $bundle_url $checksum --key=${{ secrets.ARMADA_PRIVATE_KEY }}
+        npx armada-cli project publish ${{ env.PROJECT_ID }} $bundle_url ${{ steps.create_release.outputs.checksum }} --key=${{ secrets.ARMADA_PRIVATE_KEY }}
