@@ -55,4 +55,4 @@ jobs:
 
         # this step can be run externally or controlled by a multisig or DAO
         # this is what actually writes the bundle url and checksum to chain
-        npx armada-cli project publish ${{ env.PROJECT_ID }} $bundle_url ${{ steps.create_release.outputs.checksum }} --key=${{ secrets.ARMADA_PRIVATE_KEY }}
+        npx armada-cli project publish ${{ vars.PROJECT_ID }} $bundle_url ${{ steps.create_release.outputs.checksum }} --key=${{ secrets.ARMADA_PRIVATE_KEY }}
