@@ -26,10 +26,11 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
       run: |
-        bundle_filename="$(npx --package=armada-cli@0.2.1 --yes armada bundle create ${{ github.event.inputs.name }} v2/ui/out)"
-        
-        checksum="$(npx --package=armada-cli@0.2.1 --yes armada bundle checksum $bundle_filename)"
+        # there's a Github Action to automate the below process, but just displaying the entire workflow here in case of desired customizations
+        # https://github.com/armada-network/armada-release-action
 
+        bundle_filename="$(npx --package=armada-cli@0.2.1 --yes armada bundle create ${{ github.event.inputs.name }} v2/ui/out)"
+        checksum="$(npx --package=armada-cli@0.2.1 --yes armada bundle checksum $bundle_filename)"
         checksum_filename=${{ github.event.inputs.name }}"_SHA256SUM"
         echo "$checksum" > $checksum_filename
 
@@ -38,7 +39,6 @@ jobs:
         gh release upload -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }} $checksum_filename
 
         echo "bundle_filename=$bundle_filename" >> $GITHUB_OUTPUT
-        echo "checksum_filename=$checksum_filename" >> $GITHUB_OUTPUT
         echo "checksum=$checksum" >> $GITHUB_OUTPUT
     - name: Publish release
       id: publish_release
