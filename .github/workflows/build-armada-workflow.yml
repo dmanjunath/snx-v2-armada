@@ -39,6 +39,8 @@ jobs:
 
         echo "bundle_filename" $bundle_filename "checksum" $checksum
 
+        sleep 30
+
         echo "about to fetch bundle url"
         echo $(gh release view ${{ github.event.inputs.name }} --json assets)
         bundle_url=$(gh release view ${{ github.event.inputs.name }} --json assets --jq ".assets[] | select(.name == \"$bundle_filename\") | .url")
