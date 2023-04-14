@@ -39,7 +39,8 @@ jobs:
 
         sleep 15
 
-        bundle_url="$(gh release view ${{ github.event.inputs.name }} --json assets --jq '.assets[] | select(.name == \"$bundle_filename\") | .url')"
+        bundle_url=$(gh release view ${{ github.event.inputs.name }} --json assets --jq ".assets[] | select(.name == \"$bundle_filename\") | .url")
+        echo "bundle_url" $bundle_url
 
         # this step can be run externally or controlled by a multisig or DAO
         # this is what actually writes the bundle url and checksum to chain
