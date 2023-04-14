@@ -37,7 +37,7 @@ jobs:
         gh release upload -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }} $bundle_filename
         gh release upload -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }} $checksum_filename
 
-        echo "bundle_filename" $bundle_filename "checksum" $checksum "
+        echo "bundle_filename" $bundle_filename "checksum" $checksum
 
         echo "about to fetch bundle url"
         bundle_url=$(gh release view ${{ github.event.inputs.name }} --json assets --jq ".assets[] | select(.name == \"$bundle_filename\") | .url")
