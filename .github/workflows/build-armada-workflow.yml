@@ -18,7 +18,7 @@ jobs:
       run: |
         # if workflow input is set, use that. otherwise default to "release-$(datestr)"
         release_name=${{ github.event.inputs.name }}
-        [ -z "$release_name" ] && release_name=release-$(date +"%m_%d_%y_%T")
+        [ -z "$release_name" ] && release_name=release-$(date +"%m_%d_%y__%I_%M_%p")
         echo $release_name
         echo "release_name=$release_name" >> $GITHUB_OUTPUT
     - uses: actions/checkout@v3
