@@ -2,7 +2,7 @@ name: 'Publish to Armada'
 on:
   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron:  '0 * * * *'
+    - cron:  '0 */3 * * *'
   workflow_dispatch:
     inputs:
       name:
@@ -18,7 +18,7 @@ jobs:
       run: |
         # if workflow input is set, use that. otherwise default to "release-$(datestr)"
         release_name=${{ github.event.inputs.name }}
-        [ -z "$release_name" ] && release_name=release-$(date +"%m_%d_%y__%I_%M_%p")
+        [ -z "$release_name" ] && release_name=release-$(date +"%m_%d_%y_%I_%M_%p")
         echo $release_name
         echo "release_name=$release_name" >> $GITHUB_OUTPUT
     - uses: actions/checkout@v3
@@ -58,4 +58,4 @@ jobs:
 
         # this step can be run externally or controlled by a multisig or DAO
         # this is what actually writes the bundle url and checksum to chain
-        # npx armada-cli project publish ${{ vars.PROJECT_ID }} $bundle_url ${{ steps.create_release.outputs.checksum }} --key=${{ secrets.ARMADA_PRIVATE_KEY }}
+        npx armada-cli project publish ${{ vars.PROJECT_ID }} $bundle_url ${{ steps.create_release.outputs.checksum }} --key=${{ secrets.ARMADA_PRIVATE_KEY }}
