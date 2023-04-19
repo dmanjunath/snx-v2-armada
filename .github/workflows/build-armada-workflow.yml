@@ -37,14 +37,14 @@ jobs:
         # there's a Github Action to automate the below process, but just displaying the entire workflow here in case of desired customizations
         # https://github.com/armada-network/armada-release-action
 
-        bundle_filename="$(npx --package=armada-cli@0.2.1 --yes armada bundle create ${{ steps.create_release.outputs.bundle_filename }} v2/ui/out)"
+        bundle_filename="$(npx --package=armada-cli@0.2.1 --yes armada bundle create ${{ steps.set_variables.outputs.release_name }} v2/ui/out)"
         checksum="$(npx --package=armada-cli@0.2.1 --yes armada bundle checksum $bundle_filename)"
-        checksum_filename=${{ steps.create_release.outputs.bundle_filename }}"_SHA256SUM"
+        checksum_filename=${{ steps.set_variables.outputs.release_name }}"_SHA256SUM"
         echo "$checksum" > $checksum_filename
 
-        gh release create -R $GITHUB_REPOSITORY ${{ steps.create_release.outputs.bundle_filename }}
-        gh release upload -R $GITHUB_REPOSITORY ${{ steps.create_release.outputs.bundle_filename }} $bundle_filename
-        gh release upload -R $GITHUB_REPOSITORY ${{ steps.create_release.outputs.bundle_filename }} $checksum_filename
+        gh release create -R $GITHUB_REPOSITORY ${{ steps.set_variables.outputs.release_name }}
+        gh release upload -R $GITHUB_REPOSITORY ${{ steps.set_variables.outputs.release_name }} $bundle_filename
+        gh release upload -R $GITHUB_REPOSITORY ${{ steps.set_variables.outputs.release_name }} $checksum_filename
 
         echo "bundle_filename=$bundle_filename" >> $GITHUB_OUTPUT
         echo "checksum=$checksum" >> $GITHUB_OUTPUT
@@ -53,7 +53,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
       run: |
-        bundle_url=$(gh release view -R $GITHUB_REPOSITORY ${{ steps.create_release.outputs.bundle_filename }} --json assets --jq ".assets[] | select(.name == \"${{ steps.create_release.outputs.bundle_filename }}\") | .url")
+        bundle_url=$(gh release view -R $GITHUB_REPOSITORY ${{ steps.set_variables.outputs.release_name }} --json assets --jq ".assets[] | select(.name == \"${{ steps.create_release.outputs.bundle_filename }}\") | .url")
 
         # this step can be run externally or controlled by a multisig or DAO
         # this is what actually writes the bundle url and checksum to chain
