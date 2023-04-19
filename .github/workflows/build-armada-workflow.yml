@@ -12,18 +12,18 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-      with:
-        repository: Synthetixio/js-monorepo
-        token: ${{ secrets.TOKEN }}
     - name: Set variables
       id: set_variables
       run: |
         # if workflow input is set, use that. otherwise default to "release-$(datestr)"
         release_name=${{ github.event.inputs.name }}
-        [ -z "$release_name" ] && release_name=${{ github.event.inputs.name }}"-$(date +"%D_%T")
+        [ -z "$release_name" ] && release_name=release"-$(date +"%D_%T")
         echo $release_name
         echo "release_name=$release_name" >> $GITHUB_OUTPUT
+    - uses: actions/checkout@v3
+      with:
+        repository: Synthetixio/js-monorepo
+        token: ${{ secrets.TOKEN }}
     - name: Install dependencies & build SNX v2 UI
       run: |
         cd v2/ui
