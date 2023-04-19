@@ -1,7 +1,8 @@
 name: 'Publish to Armada'
 on:
-  # this is currently triggered manually because it's running on an external repo
-  # but if this was part of a regular CI workflow it could be run on merge or release or cron
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '0 * * * *'
   workflow_dispatch:
     inputs:
       name:
@@ -17,7 +18,7 @@ jobs:
       run: |
         # if workflow input is set, use that. otherwise default to "release-$(datestr)"
         release_name=${{ github.event.inputs.name }}
-        [ -z "$release_name" ] && release_name=release-$(date +"%D_%T")
+        [ -z "$release_name" ] && release_name=release-$(date +"%m_%d_%y_%T")
         echo $release_name
         echo "release_name=$release_name" >> $GITHUB_OUTPUT
     - uses: actions/checkout@v3
