@@ -1,17 +1,26 @@
 name: 'Publish to Armada'
 on:
-  # this is currently triggered manually because it's running on an external repo
-  # but if this was part of a regular CI workflow it could be run on merge or release or cron
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '0 */3 * * *'
   workflow_dispatch:
     inputs:
       name:
-        required: true
+        required: false
 
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
+    - name: Set variables
+      id: set_variables
+      run: |
+        # if workflow input is set, use that. otherwise default to "release-$(datestr)"
+        release_name=${{ github.event.inputs.name }}
+        [ -z "$release_name" ] && release_name=release-$(date +"%m_%d_%y_%I_%M_%p")
+        echo $release_name
+        echo "release_name=$release_name" >> $GITHUB_OUTPUT
     - uses: actions/checkout@v3
       with:
         repository: Synthetixio/js-monorepo
@@ -19,6 +28,15 @@ jobs:
     - name: Install dependencies & build SNX v2 UI
       run: |
         cd v2/ui
+        tee -a .env.local << END
+        NEXT_PUBLIC_PORTIS_APP_ID=${{ secrets.PORTIS_APP_ID }}
+        NEXT_PUBLIC_BN_ONBOARD_API_KEY=${{ secrets.BLOCKNATIVE_ONBOARD_API_KEY }}
+        NEXT_PUBLIC_INFURA_PROJECT_ID=${{ secrets.INFURA_PROJECT_ID }}
+        NEXT_PUBLIC_SOCKET_API_KEY=${{ secrets.SOCKET_API_KEY }}
+        NEXT_PUBLIC_ALCHEMY_MAINNET_KEY=123
+        NEXT_PUBLIC_ALCHEMY_OVM_KEY=12345
+        END
+
         yarn install
         yarn build
     - name: Create armada release
@@ -29,14 +47,14 @@ jobs:
         # there's a Github Action to automate the below process, but just displaying the entire workflow here in case of desired customizations
         # https://github.com/armada-network/armada-release-action
 
-        bundle_filename="$(npx --package=armada-cli@0.2.1 --yes armada bundle create ${{ github.event.inputs.name }} v2/ui/out)"
+        bundle_filename="$(npx --package=armada-cli@0.2.1 --yes armada bundle create ${{ steps.set_variables.outputs.release_name }} v2/ui/out)"
         checksum="$(npx --package=armada-cli@0.2.1 --yes armada bundle checksum $bundle_filename)"
-        checksum_filename=${{ github.event.inputs.name }}"_SHA256SUM"
+        checksum_filename=${{ steps.set_variables.outputs.release_name }}"_SHA256SUM"
         echo "$checksum" > $checksum_filename
 
-        gh release create -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }}
-        gh release upload -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }} $bundle_filename
-        gh release upload -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }} $checksum_filename
+        gh release create -R $GITHUB_REPOSITORY ${{ steps.set_variables.outputs.release_name }}
+        gh release upload -R $GITHUB_REPOSITORY ${{ steps.set_variables.outputs.release_name }} $bundle_filename
+        gh release upload -R $GITHUB_REPOSITORY ${{ steps.set_variables.outputs.release_name }} $checksum_filename
 
         echo "bundle_filename=$bundle_filename" >> $GITHUB_OUTPUT
         echo "checksum=$checksum" >> $GITHUB_OUTPUT
@@ -45,7 +63,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
       run: |
-        bundle_url=$(gh release view -R $GITHUB_REPOSITORY ${{ github.event.inputs.name }} --json assets --jq ".assets[] | select(.name == \"${{ steps.create_release.outputs.bundle_filename }}\") | .url")
+        bundle_url=$(gh release view -R $GITHUB_REPOSITORY ${{ steps.set_variables.outputs.release_name }} --json assets --jq ".assets[] | select(.name == \"${{ steps.create_release.outputs.bundle_filename }}\") | .url")
 
         # this step can be run externally or controlled by a multisig or DAO
         # this is what actually writes the bundle url and checksum to chain
