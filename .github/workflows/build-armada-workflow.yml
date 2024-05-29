@@ -24,7 +24,6 @@ jobs:
     - uses: actions/checkout@v3
       with:
         repository: Synthetixio/js-monorepo
-        token: ${{ secrets.TOKEN }}
     - name: Install dependencies & build SNX v2 UI
       run: |
         cd v2/ui
